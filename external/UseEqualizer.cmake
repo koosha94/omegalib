@@ -2,24 +2,30 @@ set(EQUALIZER_BASE_DIR ${CMAKE_BINARY_DIR}/3rdparty/equalizer)
 
 # Equalizer support enabled: uncompress and prepare the external project.
 if(APPLE)
+    #message("${CURRENT_OSX_VERSION}")
+    string(REGEX MATCH "[0-9]+\\.[0-9]+" OSX_FAMILY ${CURRENT_OSX_VERSION} )
+    #message("${OSX_FAMILY}")
+    
     ExternalProject_Add(
 		equalizer
 		URL http://github.com/omega-hub/Equalizer-1.0.2/archive/master.tar.gz
-		CMAKE_ARGS 
+		CMAKE_ARGS
 			-DCMAKE_MACOSX_RPATH=${CMAKE_MACOSX_RPATH}
 			-DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}
 			-DCMAKE_BUILD_WITH_INSTALL_RPATH=${CMAKE_BUILD_WITH_INSTALL_RPATH}
 			-DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 			-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 			#-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE:PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}
-            -DCMAKE_OSX_SYSROOT:PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${CURRENT_OSX_VERSION}.sdk
-            -DCMAKE_OSX_DEPLOYMENT_TARGET:VAR=${CURRENT_OSX_VERSION}
+            -DCMAKE_OSX_SYSROOT:PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_FAMILY}.sdk
+      #      -DCMAKE_OSX_SYSROOT:PATH=macosx${OSX_FAMILY}
+      		-DCMAKE_CXX_FLAGS:VAR=-stdlib=libstdc++
+            -DCMAKE_OSX_DEPLOYMENT_TARGET:VAR=${OSX_FAMILY}
 			-DEQUALIZER_PREFER_AGL:BOOL=OFF
 			-DEQUALIZER_USE_CUDA:BOOL=OFF
 			-DEQUALIZER_USE_BOOST:BOOL=OFF
             -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
 			INSTALL_COMMAND ""
-            PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/external/equalizer.${CURRENT_OSX_VERSION}.patch
+            PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/external/equalizer.${OSX_FAMILY}.patch
 	    # directories
     	TMP_DIR ${CMAKE_BINARY_DIR}/3rdparty/tmp
     	STAMP_DIR ${CMAKE_BINARY_DIR}/3rdparty/stamp
@@ -31,7 +37,7 @@ else()
 	ExternalProject_Add(
 		equalizer
 		URL  http://github.com/omega-hub/Equalizer-1.0.2/archive/master.tar.gz
-		CMAKE_ARGS 
+		CMAKE_ARGS
 			-DEQUALIZER_USE_CUDA:BOOL=OFF
 			-DEQUALIZER_USE_BOOST:BOOL=OFF
 			-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG:PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}
@@ -62,20 +68,25 @@ if(WIN32)
 
 else()
 	if(APPLE)
-		set(EQUALIZER_EQ_LIB_DEBUG ${EQUALIZER_BINARY_DIR}/libs/client/libEqualizer.dylib)
-		set(EQUALIZER_CO_LIB_DEBUG ${EQUALIZER_BINARY_DIR}/libs/collage/libCollage.dylib)
+		set(EQUALIZER_EQ_LIB_DEBUG debug ${EQUALIZER_BINARY_DIR}/libs/client/Debug/libEqualizer.dylib)
+		set(EQUALIZER_CO_LIB_DEBUG debug ${EQUALIZER_BINARY_DIR}/libs/collage/Debug/libCollage.dylib)
+		set(EQUALIZER_EQ_LIB_RELEASE optimized ${EQUALIZER_BINARY_DIR}/libs/client/Release/libEqualizer.dylib)
+		set(EQUALIZER_CO_LIB_RELEASE optimized ${EQUALIZER_BINARY_DIR}/libs/collage/Release/libCollage.dylib)
+		
 		install(DIRECTORY ${EQUALIZER_BINARY_DIR}/libs/client/ DESTINATION omegalib/bin FILES_MATCHING PATTERN "*.dylib")
 		install(DIRECTORY ${EQUALIZER_BINARY_DIR}/libs/server/ DESTINATION omegalib/bin FILES_MATCHING PATTERN "*.dylib")
 		install(DIRECTORY ${EQUALIZER_BINARY_DIR}/libs/collage/ DESTINATION omegalib/bin FILES_MATCHING PATTERN "*.dylib")
 	else()
 		set(EQUALIZER_EQ_LIB_DEBUG ${EQUALIZER_BINARY_DIR}/libs/client/libEqualizer.so)
 		set(EQUALIZER_CO_LIB_DEBUG ${EQUALIZER_BINARY_DIR}/libs/collage/libCollage.so)
+		set(EQUALIZER_EQ_LIB_RELEASE ${EQUALIZER_BINARY_DIR}/libs/client/libEqualizer.dylib)
+		set(EQUALIZER_CO_LIB_RELEASE ${EQUALIZER_BINARY_DIR}/libs/collage/libCollage.dylib)
 		install(DIRECTORY ${EQUALIZER_BINARY_DIR}/libs/client/ DESTINATION omegalib/bin FILES_MATCHING PATTERN "*.so*")
 		install(DIRECTORY ${EQUALIZER_BINARY_DIR}/libs/server/ DESTINATION omegalib/bin FILES_MATCHING PATTERN "*.so*")
 		install(DIRECTORY ${EQUALIZER_BINARY_DIR}/libs/collage/ DESTINATION omegalib/bin FILES_MATCHING PATTERN "*.so*")
-	endif()	
+	endif()
 	set(EQUALIZER_LIBS_DEBUG ${EQUALIZER_EQ_LIB_DEBUG} ${EQUALIZER_CO_LIB_DEBUG})
-	set(EQUALIZER_LIBS_RELEASE ${EQUALIZER_EQ_LIB_DEBUG} ${EQUALIZER_CO_LIB_DEBUG})
+	set(EQUALIZER_LIBS_RELEASE ${EQUALIZER_EQ_LIB_RELEASE} ${EQUALIZER_CO_LIB_RELEASE})
 endif()
-set(EQUALIZER_LIBS ${EQUALIZER_LIBS_DEBUG} ${EQUALIZER_LIBS_RELEASE})
+set(EQUALIZER_LIBS  ${EQUALIZER_LIBS_RELEASE} ${EQUALIZER_LIBS_DEBUG})
 set(EQUALIZER_INCLUDES ${EQUALIZER_BINARY_DIR}/include)

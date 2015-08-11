@@ -22,7 +22,14 @@ execute_process(
   OUTPUT_VARIABLE GIT_BRANCH
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-
+if(APPLE)
+        
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -stdlib=libstdc++" CACHE STRING "" FORCE)
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -stdlib=libstdc++" CACHE STRING "" FORCE)
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "" FORCE)
+    SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "" FORCE)
+    SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "" FORCE)
+endif(APPLE)
 #-------------------------------------------------------------------------------
 # Create a build name depending on the OS, Toolset and architecture.
 if(CMAKE_GENERATOR STREQUAL "Visual Studio 9 2008")
